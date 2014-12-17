@@ -14,65 +14,87 @@ class Cursor
 		noLimit = 0;
 
 		cnx = collection.db.mongo.cnx;
+		cursorId = null;  // marks that no query was executed yet
 		finished = false;
-		documents = null;  // null marks that the query was not yet submitted
+		documents = [];
+		retCnt = 0;
 	}
 
-	private inline function checkResponse():Bool
+	private inline function checkResponse()
 	{
+		trace("checkResponse: " + untyped [finished, cursorId, documents.length, noLimit, noReturn, retCnt]);
 		cursorId = cnx.response(documents);
 		if (documents.length == 0)
 		{
+			trace("done");
 			finished = true;
 			if (cursorId != null)
 			{
+				trace("killing cursor");
 				cnx.killCursors([cursorId]);
+				cursorId = null;
 			}
-			return false;
 		}
-		else
+		retCnt += documents.length;
+	}
+
+	private inline function getMore():Void
+	{
+		trace("getMore: " + untyped [finished, cursorId, documents.length, noLimit, noReturn, retCnt]);
+
+		if (finished)
+			return;
+
+		if (cursorId == null)
 		{
-			return true;
+			// the query was not submitted yet
+			cnx.query(collection.fullname, query, returnFields, noSkip, noReturn);
+			checkResponse();
+		}
+		else if (noLimit == 0 || noLimit < retCnt)
+		{
+			// just try to get more results
+			var noRet;
+			if (noLimit == 0)
+			{
+				noRet = noReturn;
+			}
+			else
+			{
+				noRet = noLimit - retCnt;
+				if (noRet > noReturn)
+					noRet = noReturn;
+			}
+			trace(noRet);
+			cnx.getMore(collection.fullname, cursorId, noRet);
+			checkResponse();
+			trace(retCnt);
 		}
 	}
 
 	public function hasNext():Bool
 	{
-		if (documents == null)
+		trace("hasNext: " + untyped [finished, cursorId, documents.length, noLimit, noReturn, retCnt]);
+		if (documents.length == 0)
 		{
-			// no query submitted yet
-			documents = [];
-			// trace(query);
-			cnx.query(collection.fullname, query, returnFields, noSkip, noReturn);
-			checkResponse();
+			getMore();
 		}
-
-		// we've depleted the cursor
-		if (finished) return false;
-
-		if (documents.length > 0)
-		{
-			return true;
-		}
-		else if (noLimit == 0 || noLimit != noReturn)
-		{
-			cnx.getMore(collection.fullname, cursorId);
-			if (checkResponse())
-			{
-				return true;
-			}
-		}
-		return false;
+		return !finished && documents.length != 0;
 	}
 
 	public function next():Dynamic
 	{
+		trace("next: " + untyped [finished, cursorId, documents.length, noLimit, noReturn, retCnt]);
+		if (documents.length == 0)
+		{
+			getMore();
+		}
 		return documents.shift();
 	}
 	
 	public function limit(number:Int):Cursor
 	{
-		if (documents != null)
+		if (cursorId != null)
 			throw "Cursor.limit() must be used before retrieving anything";
 		noReturn = noLimit = number;
 		return this;
@@ -80,7 +102,7 @@ class Cursor
 
 	public function skip(number:Int):Cursor
 	{
-		if (documents != null)
+		if (cursorId != null)
 			throw "Cursor.skip() must be used before retrieving anything";
 		noSkip = number;
 		return this;
@@ -88,7 +110,7 @@ class Cursor
 
 	public function sort(spec:Dynamic):Cursor
 	{
-		if (documents != null)
+		if (cursorId != null)
 			throw "Cursor.sort() must be used before retrieving anything";
 		addQueryElement("$orderby", spec);
 		return this;
@@ -96,7 +118,7 @@ class Cursor
 
 	public function toArray():Array<Dynamic>
 	{
-		if (documents != null)
+		if (cursorId != null)
 			throw "Cursor.toArray() must be used before retrieving anything";
 		var ret = [];
 		for (x in this)
@@ -124,5 +146,6 @@ class Cursor
 	private var cursorId:Int64;
 	private var documents:Array<Dynamic>;
 	private var finished:Bool;
+	private var retCnt:Int;
 }
 
