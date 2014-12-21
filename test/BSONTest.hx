@@ -1,5 +1,4 @@
 import haxe.Int64;
-import haxe.unit.TestCase;
 import org.bsonspec.BSON;
 import org.bsonspec.BSONDocument;
 import org.bsonspec.MongoDate;
@@ -68,6 +67,7 @@ class BSONTest extends TestCase
                 assertFalse(false);
 	}
 
+	// tests the MongoDate implementation
 	@:access(org.bsonspec.MongoDate)
 	function testMongoDate()
 	{
@@ -97,6 +97,27 @@ class BSONTest extends TestCase
 		test(0x007, 0x57B12C00);  // 365 days
 		test(0x148, 0xED0DAAE8);  // some time at 7 Oct 2014
 		test(0x148, 0xED203CD0);  // some other time at 7 Oct 2014
+	}
+
+	// tests the usability of date types within the driver
+	function testDate()
+	{
+		var now = Date.now();
+
+		// common use cases, both in encoding and decoding
+		var doc = {
+			std : now,                      // the std Date API will be used a lot
+			mongo : new MongoDate(now),     // but what about the special driver date type
+		};
+		var enc = BSON.encode(doc);
+
+		// test dynamic behavior
+		var dec:Dynamic = BSON.decode(new haxe.io.BytesInput(enc));
+		assertSame(doc, dec);
+
+		// make sure typed code works
+		var stdDec:{ std:Date } = dec;
+		var mongoDec:{ mongo:MongoDate } = dec;
 	}
 
 }
