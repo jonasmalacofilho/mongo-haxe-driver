@@ -16,7 +16,7 @@ abstract MongoDate(Date) {
     {
         // double = high << 32 + low
         //    with  a << b = a*(1 << b)
-        return new MongoDate(Date.fromTime(POW32f*ms.getHigh() + unsigned(ms.getLow())));
+        return new MongoDate(Date.fromTime(POW32f*ms.getHigh() + unsigned((ms.getLow():Int))));
     }
 
     @:to public inline function getTimeInt64():Int64
