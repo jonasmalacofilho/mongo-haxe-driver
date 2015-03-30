@@ -3,6 +3,7 @@ package org.bsonspec;
 import haxe.Int64;
 import haxe.io.Bytes;
 import haxe.io.BytesOutput;
+import org.bsonspec.ObjectID;
 
 class BSONEncoder
 {
@@ -80,7 +81,7 @@ class BSONEncoder
 			out.writeInt32(#if haxe3 bytes.length + 4 #else haxe.Int32.ofInt(bytes.length + 4) #end);
 			out.writeBytes(bytes, 0, bytes.length);
 		}
-		else if (Std.is(value, ObjectID))
+		else if (Std.is(value, ObjectIDImpl))
 		{
 			writeHeader(out, key, 0x07);
 			out.writeBytes(value.bytes, 0, 12);

@@ -1,10 +1,25 @@
 package org.bsonspec;
 
-import haxe.io.Input;
-import haxe.io.Bytes;
-import haxe.io.BytesOutput;
+import haxe.crypto.BaseCode;
+import haxe.io.*;
 
-class ObjectID
+@:forward abstract ObjectID(ObjectIDImpl) from ObjectIDImpl to ObjectIDImpl
+{
+	public function new(?input:Input)
+	{
+		this = new ObjectIDImpl(input);
+	}
+
+	@:from public static function fromString(hex:String)
+	{
+		var bhex = Bytes.ofString(hex);
+		var dec = new BaseCode(Bytes.ofString("0123456789abcdef"));
+		var bytes = dec.decodeBytes(bhex);
+		return new ObjectID(new BytesInput(bytes));
+	}
+}
+
+class ObjectIDImpl
 {
 
 	public function new(?input:Input)
@@ -48,3 +63,4 @@ class ObjectID
 	private static var pid = Std.random(65536);
 
 }
+
