@@ -12,7 +12,7 @@ import haxe.io.*;
 
 	@:from public static function fromString(hex:String)
 	{
-		var bhex = Bytes.ofString(hex);
+		var bhex = Bytes.ofString(hex.toLowerCase());
 		var dec = new BaseCode(Bytes.ofString("0123456789abcdef"));
 		var bytes = dec.decodeBytes(bhex);
 		return new ObjectID(new BytesInput(bytes));
