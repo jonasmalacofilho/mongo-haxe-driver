@@ -16,7 +16,11 @@ abstract MongoDate(Date) {
     {
         // double = high << 32 + low
         //    with  a << b = a*(1 << b)
+#if (haxe_ver >= 3.2)
         return new MongoDate(Date.fromTime(POW32f*ms.high + unsigned((ms.low:Int))));
+#else
+        return new MongoDate(Date.fromTime(POW32f*ms.getHigh() + unsigned((ms.getLow():Int))));
+#end
     }
 
     @:to public inline function getTimeInt64():Int64
