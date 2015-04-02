@@ -71,8 +71,8 @@ class BSONEncoder
 		{
 			var d64 = (value : MongoDate).getTimeInt64();
 			writeHeader(out, key, 0x09);
-			out.writeInt32(Int64.getLow(d64));
-			out.writeInt32(Int64.getHigh(d64));
+			out.writeInt32(d64.low);
+			out.writeInt32(d64.high);
 		}
 		else if (Std.is(value, Array))
 		{
