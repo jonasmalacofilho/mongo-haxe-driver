@@ -51,6 +51,11 @@ class ObjectIDImpl
 		return 'ObjectID("' + bytes.toHex() + '")';
 	}
 
+	public function valueOf():String
+	{
+		return bytes.toHex();
+	}
+
 	public var bytes(default, null):Bytes;
 	private static var sequence:Int = 0;
 
