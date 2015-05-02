@@ -56,6 +56,20 @@ class ObjectIDImpl
 		return bytes.toHex();
 	}
 
+	public function equals(a:ObjectID)
+	{
+		var len = bytes.length;
+		if (len != a.bytes.length) throw 'Assert: bad ObjectID bytes length';
+		var ret = true;
+		for (i in 0...len) {
+			if (bytes.get(i) != a.bytes.get(i)) {
+				ret = false;
+				break;
+			}
+		}
+		return ret;
+	}
+
 	public var bytes(default, null):Bytes;
 	private static var sequence:Int = 0;
 
